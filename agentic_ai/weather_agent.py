@@ -2,6 +2,9 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import json
 import requests
+from pydantic import BaseModel, Field
+from typing import Optional
+import os
 
 load_dotenv()
 
@@ -81,6 +84,14 @@ OUTPUT: {"step": "OUTPUT", "content": "The weather of Lahore is sunny and the te
 
 """
 
+
+class MyOutputFormate(BaseModel):
+    step: str = Field(..., description="It is the step LLM should take like START, PLAN, OBSERVE, OUTPUT")
+    content: Optional[str] = Field(None, description="The content LLM generate in each step")
+    input: Optional[str] = Field(None, description="The input parameter LLM pass to tool")
+    tool: Optional[str] = Field(None, description="The tool which the generates output")
+
+
 messages_arr = [
     {
         "role": "system",
@@ -101,22 +112,22 @@ while True:
     })
 
     while True:
-        response =  client.chat.completions.create(
+        response =  client.chat.completions.parse(
             model="gpt-4o",
-            response_format={"type": "json_object"},
+            response_format=MyOutputFormate,
             messages=messages_arr
         )
-        result = response.choices[0].message.content
-        messages_arr.append({"role": "assistant", "content": result})
-        result = json.loads(result)
+        result_raw = response.choices[0].message.content
+        messages_arr.append({"role": "assistant", "content": result_raw})
+        result  = response.choices[0].message.parsed
 
-        if result["step"] == "START":
-            print(f"\n\n ⭐ {result["content"]}")
-        elif result["step"] == "PLAN":
-            print(f"\n\n 📄 {result["content"]}")
-        elif result["step"] == "TOOL":
-            tool = result["tool"]
-            user_input = result["input"]
+        if result.step == "START":
+            print(f"\n\n ⭐ {result.content}")
+        elif result.step == "PLAN":
+            print(f"\n\n 📄 {result.content}")
+        elif result.step == "TOOL":
+            tool = result.tool
+            user_input = result.input
             output = tools[tool](user_input)
             print(f"\n\n 🔪Called {tool} with {user_input}🔨")
             messages_arr.append({"role": "developer", "content": json.dumps({
@@ -125,9 +136,8 @@ while True:
                 "input": user_input,
                 "output": output
             })})
-            continue
-        elif result["step"] == "OUTPUT":
-            print(f"\n\n 👋 {result["content"]}")
+        elif result.step == "OUTPUT":
+            print(f"\n\n 👋 {result.content}")
             break
 
 
