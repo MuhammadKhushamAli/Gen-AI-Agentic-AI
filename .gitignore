@@ -1,5 +1,5 @@
-/.vscode
-/*/venv
-/*/.env
-/*/__pycache__
+.vscode/
+venv/
+.env
+__pycache__/
 /Code_Assistant

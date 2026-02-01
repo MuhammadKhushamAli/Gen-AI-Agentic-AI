@@ -1,6 +1,8 @@
 from openai import OpenAI
 from langchain_openai import OpenAIEmbeddings
 from langchain_qdrant import QdrantVectorStore
+from dotenv import load_dotenv
+load_dotenv()
 
 openai_client = OpenAI()
 
@@ -37,5 +39,4 @@ async def processor(query: str):
         ]
     )
 
-    print(f"🤖 {response.choices[0].message.content}")
     return response.choices[0].message.content
