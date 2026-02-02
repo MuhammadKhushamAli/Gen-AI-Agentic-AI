@@ -4,6 +4,7 @@ from typing import Annotated
 from langgraph.graph.message import add_messages
 from langgraph.graph import StateGraph, START, END
 from langchain.chat_models import init_chat_model
+from langgraph.checkpoint.mongodb import MongoDBSaver
 
 load_dotenv()
 
@@ -16,7 +17,6 @@ class State(TypedDict):
     messages: Annotated[list, add_messages]
 
 def chat_bot(state: State):
-    print("\n\n\nChat_bot Node Added", state)
     response = llm.invoke(state.get("messages"))
     return {"messages": response}
 
@@ -28,9 +28,19 @@ graph_builder.add_node("chat_bot", chat_bot)
 graph_builder.add_edge(START, "chat_bot")
 graph_builder.add_edge("chat_bot", END)
 
-graph = graph_builder.compile()
+DB_URI = "mongodb://admin:admin@localhost:27017"
+with MongoDBSaver.from_conn_string(DB_URI) as checkpointer:
+    graph = graph_builder.compile(checkpointer=checkpointer)
+    
+    config = {
+        "configurable": {
+            "thread_id": "khusham"
+        }
+    }
 
-updated_state = graph.invoke(State({"messages": ["Hey myself Muhammad Khusham Ali"]}))
-
-print(f"\n\n\nUpdate State: {id(updated_state)}")
-print(f"\n\n\nUpdate State: {updated_state}")
+    for chunk in graph.stream(
+        State({"messages": "My name is Muhammad Khusham Ali"}),
+        config,
+        stream_mode="values"
+    ):
+        chunk["messages"][-1].pretty_print()
