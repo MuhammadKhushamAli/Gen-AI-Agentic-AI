@@ -17,6 +17,14 @@ config = {
             "port": 6333
         }
     },
+    "graph_store": {
+        "provider": "neo4j",
+        "config": {
+            "url": "bolt://localhost:7687",
+            "username": "neo4j",
+            "password": "adminKhusham"
+        }
+    },
     "embedder": {
         "provider": "openai",
         "config": {
@@ -36,9 +44,15 @@ config = {
 memory_client = Memory.from_config(config)
 
 while True:
+
+    get_all_results = memory_client.get_all(user_id="khusham")
+    print(f"All Results: {json.dumps(get_all_results, indent=4)}")
+
     user_query = input("👉 ")
 
     search_results = memory_client.search(query=user_query, user_id="khusham")
+
+    print(f"\n\n\nResults: {json.dumps(search_results, indent=4)}")
     
     memories = [
         f"{memory.get("id")}\nMemory:{memory.get("memory")}\n\n"
