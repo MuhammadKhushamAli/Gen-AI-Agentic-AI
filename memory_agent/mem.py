@@ -47,12 +47,13 @@ while True:
 
     get_all_results = memory_client.get_all(user_id="khusham")
     print(f"All Results: {json.dumps(get_all_results, indent=4)}")
+    
 
     user_query = input("👉 ")
 
     search_results = memory_client.search(query=user_query, user_id="khusham")
-
     print(f"\n\n\nResults: {json.dumps(search_results, indent=4)}")
+
     
     memories = [
         f"{memory.get("id")}\nMemory:{memory.get("memory")}\n\n"
@@ -83,3 +84,4 @@ while True:
         ],
         user_id="khusham"
     )
+    print(f"Res: {res}")
